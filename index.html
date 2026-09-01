@@ -1,1 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sistema escolar de préstamos bancarios">
+  <title>Nexo | Préstamos Bancarios</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="toast" class="toast" role="status"></div>
 
+  <main class="app-shell">
+    <section id="authView" class="auth-view">
+      <div class="brand">
+        <div class="brand-mark">C</div>
+        <div>
+          <span class="brand-name">Nexo</span>
+          <small>Sistema de préstamos</small>
+        </div>
+      </div>
+
+      <div class="auth-card">
+        <div class="eyebrow" id="authEyebrow">REGISTRARSE</div>
+        <h1 id="authTitle">Crear cuenta</h1>
+        <p id="authSubtitle">Completá tus datos para comenzar a solicitar un préstamo.</p>
+
+        <form id="registerForm" class="form">
+          <div class="field-row">
+            <label>
+              Nombre completo
+              <input id="regName" type="text" placeholder="Ej. Juan Pérez" required>
+            </label>
+            <label>
+              DNI
+              <input id="regDni" type="text" inputmode="numeric" placeholder="Ej. 45123456" required>
+            </label>
+          </div>
+
+          <label>
+            Correo electrónico
+            <input id="regEmail" type="email" placeholder="correo@ejemplo.com" required>
+          </label>
+
+          <label>
+            Ingresos mensuales
+            <input id="regIncome" type="number" min="0" step="1000" placeholder="$ 500000" required>
+          </label>
+
+          <label>
+            Contraseña
+            <input id="regPassword" type="password" minlength="4" placeholder="Contraseña" required>
+          </label>
+
+          <label>
+            Confirmar contraseña
+            <input id="regPassword2" type="password" minlength="4" placeholder="Confirmar contraseña" required>
+          </label>
+
+          <button class="primary-btn" type="submit">SIGUIENTE</button>
+        </form>
+
+        <button class="text-btn" id="demoLogin">Entrar con usuario de demostración</button>
+      </div>
+    </section>
+
+    <section id="dashboardView" class="dashboard-view hidden">
+      <header class="topbar">
+        <div class="brand compact">
+          <div class="brand-mark">C</div>
+          <div>
+            <span class="brand-name">CrediNova</span>
+            <small>Préstamos bancarios</small>
+          </div>
+        </div>
+        <button id="logoutBtn" class="logout-btn">Cerrar sesión</button>
+      </header>
+
+      <div class="dashboard-grid">
+        <aside class="sidebar">
+          <div class="profile-mini">
+            <div class="avatar" id="avatar">JP</div>
+            <div>
+              <strong id="sideName">Cliente</strong>
+              <span>Cliente registrado</span>
+            </div>
+          </div>
+          <nav>
+            <button class="nav-btn active" data-section="inicio">Inicio</button>
+            <button class="nav-btn" data-section="solicitar">Solicitar préstamo</button>
+            <button class="nav-btn" data-section="estado">Mis solicitudes</button>
+            <button class="nav-btn" data-section="pagos">Pagos</button>
+            <button class="nav-btn" data-section="empleado">Panel empleado</button>
+          </nav>
+        </aside>
+
+        <div class="content">
+          <section id="inicio" class="page-section active">
+            <div class="welcome">
+              <div>
+                <span class="eyebrow">BIENVENIDO</span>
+                <h2>Hola, <span id="welcomeName">cliente</span> 👋</h2>
+                <p>Gestioná tus solicitudes y consultá el estado de tus préstamos.</p>
+              </div>
+              <button class="primary-btn small" data-go="solicitar">SOLICITAR PRÉSTAMO</button>
+            </div>
+
+            <div class="stats">
+              <article class="stat-card">
+                <span>Solicitudes</span>
+                <strong id="statRequests">0</strong>
+                <small>registradas</small>
+              </article>
+              <article class="stat-card">
+                <span>Préstamos activos</span>
+                <strong id="statLoans">0</strong>
+                <small>vigentes</small>
+              </article>
+              <article class="stat-card">
+                <span>Pagos realizados</span>
+                <strong id="statPayments">0</strong>
+                <small>confirmados</small>
+              </article>
+            </div>
+
+            <div class="panel">
+              <div class="panel-title">
+                <div>
+                  <span class="eyebrow">RESUMEN</span>
+                  <h3>Última actividad</h3>
+                </div>
+                <button class="text-btn" data-go="estado">Ver todo</button>
+              </div>
+              <div id="activityList" class="activity-list"></div>
+            </div>
+          </section>
+
+          <section id="solicitar" class="page-section">
+            <div class="section-heading">
+              <span class="eyebrow">PROCESO 2.0</span>
+              <h2>Solicitar préstamo</h2>
+              <p>Ingresá los datos de la solicitud. El sistema realizará una evaluación crediticia simulada.</p>
+            </div>
+
+            <form id="loanForm" class="panel loan-form">
+              <div class="field-row">
+                <label>
+                  Tipo de préstamo
+                  <select id="loanType" required>
+                    <option value="">Seleccionar</option>
+                    <option>Préstamo personal</option>
+                    <option>Préstamo para estudios</option>
+                    <option>Préstamo para vivienda</option>
+                  </select>
+                </label>
+                <label>
+                  Monto solicitado
+                  <input id="loanAmount" type="number" min="10000" step="10000" placeholder="$ 1.000.000" required>
+                </label>
+              </div>
+
+              <label>
+                Plazo
+                <select id="loanTerm" required>
+                  <option value="">Seleccionar cantidad de cuotas</option>
+                  <option value="6">6 cuotas</option>
+                  <option value="12">12 cuotas</option>
+                  <option value="18">18 cuotas</option>
+                  <option value="24">24 cuotas</option>
+                </select>
+              </label>
+
+              <label>
+                Documentación presentada
+                <textarea id="loanDocs" rows="4" placeholder="Ej. DNI, recibo de sueldo, constancia laboral..." required></textarea>
+              </label>
+
+              <div class="info-box">
+                <strong>¿Qué sucede después?</strong>
+                <span>La solicitud se registra, se envía al sistema de evaluación crediticia y queda pendiente de revisión por un empleado bancario.</span>
+              </div>
+
+              <button class="primary-btn" type="submit">ENVIAR SOLICITUD</button>
+            </form>
+          </section>
+
+          <section id="estado" class="page-section">
+            <div class="section-heading">
+              <span class="eyebrow">CONSULTA</span>
+              <h2>Mis solicitudes</h2>
+              <p>Consultá el estado de tus solicitudes y préstamos.</p>
+            </div>
+            <div id="requestsList" class="cards-list"></div>
+          </section>
+
+          <section id="pagos" class="page-section">
+            <div class="section-heading">
+              <span class="eyebrow">PROCESO 5.0</span>
+              <h2>Pagos</h2>
+              <p>Registrá pagos y consultá el estado de tus cuotas.</p>
+            </div>
+            <div id="paymentsContent"></div>
+          </section>
+
+          <section id="empleado" class="page-section">
+            <div class="section-heading">
+              <span class="eyebrow">ENTIDAD EXTERNA</span>
+              <h2>Panel de empleado bancario</h2>
+              <p>Área de demostración para representar la aprobación o rechazo de solicitudes.</p>
+            </div>
+            <div class="employee-warning">Modo escolar: las decisiones se guardan solamente durante esta sesión y no utilizan una base de datos.</div>
+            <div id="employeeList" class="cards-list"></div>
+          </section>
+        </div>
+      </div>
+
+      <nav class="bottom-nav">
+        <button class="nav-btn active" data-section="inicio">Inicio</button>
+        <button class="nav-btn" data-section="solicitar">Solicitar</button>
+        <button class="nav-btn" data-section="estado">Estado</button>
+        <button class="nav-btn" data-section="pagos">Pagos</button>
+      </nav>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
