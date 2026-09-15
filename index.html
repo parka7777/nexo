@@ -3,223 +3,150 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Sistema escolar de préstamos bancarios">
-  <title>Nexo | Préstamos Bancarios</title>
+  <title>NEXO | Sistema de Préstamos</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="toast" class="toast" role="status"></div>
+  <div id="toast" class="toast"></div>
 
-  <main class="app-shell">
-    <section id="authView" class="auth-view">
-      <div class="brand">
-        <div class="brand-mark">C</div>
-        <div>
-          <span class="brand-name">Nexo</span>
-          <small>Sistema de préstamos</small>
-        </div>
+  <!-- AUTENTICACIÓN -->
+  <main id="authView" class="auth-screen">
+    <div class="brand">
+      <div class="nexo-mark"><i></i><i></i><i></i></div>
+      <div><strong>NEXO</strong><small>Sistema de préstamos bancarios</small></div>
+    </div>
+
+    <section class="auth-card">
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-auth="client">Cliente</button>
+        <button class="auth-tab" data-auth="employee">Empleado</button>
       </div>
 
-      <div class="auth-card">
-        <div class="eyebrow" id="authEyebrow">REGISTRARSE</div>
+      <div id="clientAuth">
+        <p class="section-label">BIENVENIDO A NEXO</p>
         <h1 id="authTitle">Crear cuenta</h1>
-        <p id="authSubtitle">Completá tus datos para comenzar a solicitar un préstamo.</p>
+        <p class="auth-description" id="authDescription">Registrate para administrar tus préstamos y pagos.</p>
 
-        <form id="registerForm" class="form">
-          <div class="field-row">
-            <label>
-              Nombre completo
-              <input id="regName" type="text" placeholder="Ej. Juan Pérez" required>
-            </label>
-            <label>
-              DNI
-              <input id="regDni" type="text" inputmode="numeric" placeholder="Ej. 45123456" required>
-            </label>
-          </div>
+        <div class="auth-mode">
+          <button id="showRegister" class="mode active">Registrarme</button>
+          <button id="showLogin" class="mode">Iniciar sesión</button>
+        </div>
 
-          <label>
-            Correo electrónico
-            <input id="regEmail" type="email" placeholder="correo@ejemplo.com" required>
-          </label>
-
-          <label>
-            Ingresos mensuales
-            <input id="regIncome" type="number" min="0" step="1000" placeholder="$ 500000" required>
-          </label>
-
-          <label>
-            Contraseña
-            <input id="regPassword" type="password" minlength="4" placeholder="Contraseña" required>
-          </label>
-
-          <label>
-            Confirmar contraseña
-            <input id="regPassword2" type="password" minlength="4" placeholder="Confirmar contraseña" required>
-          </label>
-
-          <button class="primary-btn" type="submit">SIGUIENTE</button>
+        <form id="registerForm" class="auth-form">
+          <label>Nombre completo<input id="regName" type="text" placeholder="Nombre y apellido" required></label>
+          <label>DNI<input id="regDni" type="text" inputmode="numeric" placeholder="DNI" required></label>
+          <label>Correo electrónico<input id="regEmail" type="email" placeholder="correo@ejemplo.com" required></label>
+          <label>Situación laboral<select id="regEmployment" required><option value="">Seleccionar</option><option>Empleado en relación de dependencia</option><option>Trabajador independiente</option><option>Monotributista</option><option>Desempleado</option></select></label><label>Ingresos mensuales<input id="regIncome" type="number" min="1" placeholder="$ 500000" required></label><label>Antigüedad laboral (años)<input id="regSeniority" type="number" min="0" max="60" step="1" placeholder="Ej.: 2" required></label><label>¿Presentás documentación de ingresos?<select id="regProof" required><option value="">Seleccionar</option><option value="si">Sí</option><option value="no">No</option></select></label><label>Contraseña<input id="regPassword" type="password" minlength="4" placeholder="Contraseña" required></label>
+          <label>Confirmar contraseña<input id="regPassword2" type="password" minlength="4" placeholder="Confirmar contraseña" required></label>
+          <button class="pink-button" type="submit">CREAR CUENTA</button>
         </form>
 
-        <button class="text-btn" id="demoLogin">Entrar con usuario de demostración</button>
+        <form id="loginForm" class="auth-form hidden">
+          <label>Correo electrónico<input id="loginEmail" type="email" placeholder="correo@ejemplo.com" required></label>
+          <label>Contraseña<input id="loginPassword" type="password" placeholder="Contraseña" required></label>
+          <button class="pink-button" type="submit">INGRESAR</button>
+        </form>
+
+        <button id="demoClient" class="link-button">Usar cliente de demostración</button>
+      </div>
+
+      <div id="employeeAuth" class="hidden">
+        <p class="section-label">ACCESO INTERNO</p>
+        <h1>Empleado bancario</h1>
+        <p class="auth-description">Acceso separado para revisar, aprobar o rechazar solicitudes.</p>
+        <form id="employeeLoginForm" class="auth-form">
+          <label>Correo<input id="employeeEmail" type="email" placeholder="empleado@nexo.com" required></label>
+          <label>Contraseña<input id="employeePassword" type="password" placeholder="Contraseña" required></label>
+          <button class="pink-button" type="submit">INGRESAR COMO EMPLEADO</button>
+        </form>
+        <div class="demo-box"><strong>Cuenta escolar de empleado</strong><br>empleado@nexo.com · nexo1234</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- APLICACIÓN CLIENTE -->
+  <main id="clientApp" class="app hidden">
+    <header class="mobile-header">
+      <button class="icon-button" id="settingsBtn" aria-label="Configuración">⚙</button>
+      <div class="mini-brand"><div class="nexo-mark small"><i></i><i></i><i></i></div><strong>NEXO</strong></div>
+      <button class="icon-button" id="logoutClient" aria-label="Cerrar sesión">↪</button>
+    </header>
+
+    <nav class="desktop-nav">
+      <button class="nav-link active" data-section="home">Inicio</button>
+      <button class="nav-link" data-section="request">Solicitar préstamo</button>
+      <button class="nav-link" data-section="requests">Mis solicitudes</button>
+      <button class="nav-link" data-section="payments">Pagos</button>
+      <span class="nav-spacer"></span>
+      <span class="account-name" id="desktopClientName"></span>
+      <button class="nav-link logout" id="logoutClientDesktop">Salir</button>
+    </nav>
+
+    <section id="homeSection" class="page active home-section">
+      <div class="hero-card">
+        <div class="hero-title">
+          <div><span class="greeting">Hola,</span><h1 id="welcomeName">Cliente</h1></div>
+          <div class="hero-logo">N</div>
+        </div>
+        <div class="loan-summary">
+          <div class="credit-icon">$</div>
+          <div><span>Deuda total</span><strong id="totalDebt">$ 0,00</strong><small>Próximo vencimiento: <b id="nextDue">--/--</b></small></div>
+        </div>
+        <button class="pay-now" data-section="payments">Ver pagos</button>
+      </div>
+
+      <div class="history-card">
+        <div class="history-header"><strong>Historial de pagos</strong><button data-section="payments">Ver todo</button></div>
+        <div id="historyList" class="history-list"></div>
+      </div>
+
+      <div class="quick-actions">
+        <button data-section="request"><span>＋</span><small>Nuevo préstamo</small></button>
+        <button data-section="requests"><span>▤</span><small>Solicitudes</small></button>
+        <button data-section="payments"><span>$</span><small>Pagos</small></button>
       </div>
     </section>
 
-    <section id="dashboardView" class="dashboard-view hidden">
-      <header class="topbar">
-        <div class="brand compact">
-          <div class="brand-mark">C</div>
-          <div>
-            <span class="brand-name">CrediNova</span>
-            <small>Préstamos bancarios</small>
-          </div>
-        </div>
-        <button id="logoutBtn" class="logout-btn">Cerrar sesión</button>
-      </header>
+    <section id="requestSection" class="page inner-page">
+      <div class="page-heading"><span class="section-label">NUEVA SOLICITUD</span><h2>Solicitar préstamo</h2><p>Completá los datos para enviar tu solicitud.</p></div>
+      <form id="loanForm" class="form-card">
+        <label>Tipo de préstamo<select id="loanType" required><option value="">Seleccionar</option><option>Préstamo personal</option><option>Préstamo para estudios</option><option>Préstamo para vivienda</option></select></label>
+        <label>Monto solicitado<input id="loanAmount" type="number" min="10000" step="10000" placeholder="$ 1.000.000" required></label>
+        <label>Plazo<select id="loanTerm" required><option value="">Seleccionar cuotas</option><option value="6">6 cuotas</option><option value="12">12 cuotas</option><option value="18">18 cuotas</option><option value="24">24 cuotas</option></select></label>
+        <label>Destino del préstamo<textarea id="loanPurpose" placeholder="Ej.: compra de una computadora, estudios, refacción del hogar..." required></textarea></label>
+        <div class="process-note"><strong>Datos ya registrados</strong><span>Tu DNI, ingresos y situación laboral ya fueron informados al crear la cuenta. NEXO los utilizará para la evaluación crediticia, por eso no es necesario volver a pedirlos.</span></div>
+        <button class="pink-button" type="submit">ENVIAR SOLICITUD</button>
+      </form>
+    </section>
 
-      <div class="dashboard-grid">
-        <aside class="sidebar">
-          <div class="profile-mini">
-            <div class="avatar" id="avatar">JP</div>
-            <div>
-              <strong id="sideName">Cliente</strong>
-              <span>Cliente registrado</span>
-            </div>
-          </div>
-          <nav>
-            <button class="nav-btn active" data-section="inicio">Inicio</button>
-            <button class="nav-btn" data-section="solicitar">Solicitar préstamo</button>
-            <button class="nav-btn" data-section="estado">Mis solicitudes</button>
-            <button class="nav-btn" data-section="pagos">Pagos</button>
-            <button class="nav-btn" data-section="empleado">Panel empleado</button>
-          </nav>
-        </aside>
+    <section id="requestsSection" class="page inner-page">
+      <div class="page-heading"><span class="section-label">MIS PRÉSTAMOS</span><h2>Solicitudes</h2><p>Solo se muestran las solicitudes de la cuenta que inició sesión.</p></div>
+      <div id="requestsList" class="stack"></div>
+    </section>
 
-        <div class="content">
-          <section id="inicio" class="page-section active">
-            <div class="welcome">
-              <div>
-                <span class="eyebrow">BIENVENIDO</span>
-                <h2>Hola, <span id="welcomeName">cliente</span> 👋</h2>
-                <p>Gestioná tus solicitudes y consultá el estado de tus préstamos.</p>
-              </div>
-              <button class="primary-btn small" data-go="solicitar">SOLICITAR PRÉSTAMO</button>
-            </div>
+    <section id="paymentsSection" class="page inner-page">
+      <div class="page-heading"><span class="section-label">PAGOS</span><h2>Mis pagos</h2><p>Podés pagar una cuota o cancelar un préstamo completo de contado.</p></div>
+      <div id="paymentsList" class="stack"></div>
+    </section>
 
-            <div class="stats">
-              <article class="stat-card">
-                <span>Solicitudes</span>
-                <strong id="statRequests">0</strong>
-                <small>registradas</small>
-              </article>
-              <article class="stat-card">
-                <span>Préstamos activos</span>
-                <strong id="statLoans">0</strong>
-                <small>vigentes</small>
-              </article>
-              <article class="stat-card">
-                <span>Pagos realizados</span>
-                <strong id="statPayments">0</strong>
-                <small>confirmados</small>
-              </article>
-            </div>
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-section="home"><span>⌂</span><small>Inicio</small></button>
+      <button class="nav-item" data-section="request"><span>＋</span><small>Solicitar</small></button>
+      <button class="nav-item" data-section="payments"><span>$</span><small>Pagos</small></button>
+      <button class="nav-item" data-section="requests"><span>▤</span><small>Solicitudes</small></button>
+    </nav>
+  </main>
 
-            <div class="panel">
-              <div class="panel-title">
-                <div>
-                  <span class="eyebrow">RESUMEN</span>
-                  <h3>Última actividad</h3>
-                </div>
-                <button class="text-btn" data-go="estado">Ver todo</button>
-              </div>
-              <div id="activityList" class="activity-list"></div>
-            </div>
-          </section>
-
-          <section id="solicitar" class="page-section">
-            <div class="section-heading">
-              <span class="eyebrow">PROCESO 2.0</span>
-              <h2>Solicitar préstamo</h2>
-              <p>Ingresá los datos de la solicitud. El sistema realizará una evaluación crediticia simulada.</p>
-            </div>
-
-            <form id="loanForm" class="panel loan-form">
-              <div class="field-row">
-                <label>
-                  Tipo de préstamo
-                  <select id="loanType" required>
-                    <option value="">Seleccionar</option>
-                    <option>Préstamo personal</option>
-                    <option>Préstamo para estudios</option>
-                    <option>Préstamo para vivienda</option>
-                  </select>
-                </label>
-                <label>
-                  Monto solicitado
-                  <input id="loanAmount" type="number" min="10000" step="10000" placeholder="$ 1.000.000" required>
-                </label>
-              </div>
-
-              <label>
-                Plazo
-                <select id="loanTerm" required>
-                  <option value="">Seleccionar cantidad de cuotas</option>
-                  <option value="6">6 cuotas</option>
-                  <option value="12">12 cuotas</option>
-                  <option value="18">18 cuotas</option>
-                  <option value="24">24 cuotas</option>
-                </select>
-              </label>
-
-              <label>
-                Documentación presentada
-                <textarea id="loanDocs" rows="4" placeholder="Ej. DNI, recibo de sueldo, constancia laboral..." required></textarea>
-              </label>
-
-              <div class="info-box">
-                <strong>¿Qué sucede después?</strong>
-                <span>La solicitud se registra, se envía al sistema de evaluación crediticia y queda pendiente de revisión por un empleado bancario.</span>
-              </div>
-
-              <button class="primary-btn" type="submit">ENVIAR SOLICITUD</button>
-            </form>
-          </section>
-
-          <section id="estado" class="page-section">
-            <div class="section-heading">
-              <span class="eyebrow">CONSULTA</span>
-              <h2>Mis solicitudes</h2>
-              <p>Consultá el estado de tus solicitudes y préstamos.</p>
-            </div>
-            <div id="requestsList" class="cards-list"></div>
-          </section>
-
-          <section id="pagos" class="page-section">
-            <div class="section-heading">
-              <span class="eyebrow">PROCESO 5.0</span>
-              <h2>Pagos</h2>
-              <p>Registrá pagos y consultá el estado de tus cuotas.</p>
-            </div>
-            <div id="paymentsContent"></div>
-          </section>
-
-          <section id="empleado" class="page-section">
-            <div class="section-heading">
-              <span class="eyebrow">ENTIDAD EXTERNA</span>
-              <h2>Panel de empleado bancario</h2>
-              <p>Área de demostración para representar la aprobación o rechazo de solicitudes.</p>
-            </div>
-            <div class="employee-warning">Modo escolar: las decisiones se guardan solamente durante esta sesión y no utilizan una base de datos.</div>
-            <div id="employeeList" class="cards-list"></div>
-          </section>
-        </div>
-      </div>
-
-      <nav class="bottom-nav">
-        <button class="nav-btn active" data-section="inicio">Inicio</button>
-        <button class="nav-btn" data-section="solicitar">Solicitar</button>
-        <button class="nav-btn" data-section="estado">Estado</button>
-        <button class="nav-btn" data-section="pagos">Pagos</button>
-      </nav>
+  <!-- APLICACIÓN EMPLEADO -->
+  <main id="employeeApp" class="app employee-app hidden">
+    <header class="employee-header">
+      <div class="mini-brand"><div class="nexo-mark small"><i></i><i></i><i></i></div><strong>NEXO</strong></div>
+      <div><span class="employee-tag">PANEL DE EMPLEADO</span><button id="logoutEmployee" class="employee-logout">Cerrar sesión</button></div>
+    </header>
+    <section class="inner-page employee-page">
+      <div class="page-heading"><span class="section-label">SISTEMA BANCARIO</span><h2>Solicitudes de clientes</h2><p>El empleado puede revisar la evaluación y decidir si aprueba o rechaza cada solicitud.</p></div>
+      <div class="process-note warning">Cuenta separada de los clientes. El empleado no puede ver los datos privados de una cuenta cliente salvo la información necesaria para evaluar la solicitud.</div>
+      <div id="employeeList" class="stack"></div>
     </section>
   </main>
 

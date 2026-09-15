@@ -1,35 +1,34 @@
-# Nexo — Sistema de Préstamos Bancarios
+# NEXO — Sistema de Préstamos Bancarios
 
-Proyecto escolar realizado solamente con HTML, CSS y JavaScript.
+Proyecto escolar realizado únicamente con **HTML, CSS y JavaScript**. No utiliza base de datos, frameworks ni backend.
 
-## Estructura
+## Cambios de esta versión
 
-- `index.html` — estructura de la aplicación.
-- `style.css` — diseño visual responsive.
-- `script.js` — lógica y simulación de los procesos.
+- En PC NEXO ocupa toda la pantalla.
+- La navegación inferior aparece únicamente en celulares.
+- En PC se usa navegación superior.
+- Cada cliente tiene su propia cuenta y solo puede ver sus propios datos.
+- El empleado tiene una cuenta separada.
+- Datos de cliente solicitados al registrarse: nombre, DNI, correo, situación laboral, ingresos, antigüedad y documentación de ingresos.
+- La solicitud de préstamo ya no vuelve a pedir DNI ni documentación: usa los datos registrados en la cuenta.
+- El préstamo solicita tipo, monto, plazo y destino.
+- Se agregan validaciones básicas para que no se pueda enviar cualquier valor.
+- Se puede pagar una cuota o cancelar el préstamo de contado.
 
-## Importante
+## Cuenta escolar de empleado
 
-El proyecto **no utiliza una base de datos**. Toda la información se mantiene únicamente en memoria mientras la página está abierta. Al recargar, los datos se reinician.
+Correo: `empleado@nexo.com`
 
-## Procesos representados
+Contraseña: `nexo1234`
 
-1.0 Registrar cliente  
-2.0 Registrar solicitud de préstamo  
-3.0 Evaluar solicitud  
-4.0 Aprobar y otorgar préstamo  
-5.0 Registrar y gestionar pagos  
+## Cliente de demostración
 
-## Entidades externas representadas
+Correo: `demo@nexo.com`
 
-- Clientes
-- Sistema de evaluación crediticia (simulado dentro del proceso)
-- Empleado bancario
-- Sistema bancario central (simulado para confirmar pagos y otorgamiento)
+Contraseña: `demo1234`
 
-## Cómo subirlo a GitHub Pages
+## Publicar en GitHub Pages
 
-1. Creá un repositorio nuevo en GitHub.
-2. Subí `index.html`, `style.css` y `script.js`.
-3. En **Settings → Pages**, seleccioná la rama principal y la carpeta `/root`.
-4. Guardá y GitHub Pages publicará la página.
+Subir `index.html`, `style.css` y `script.js` al repositorio y activar GitHub Pages desde Settings → Pages → Deploy from branch → rama principal → `/root`.
+
+Los datos se guardan en `localStorage` del navegador. Para una aplicación real se necesitaría un backend y una base de datos.

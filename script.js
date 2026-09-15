@@ -1,388 +1,150 @@
-const state = {
-  user: null,
-  requests: [],
-  loans: [],
-  payments: [],
-  activities: []
+const STORAGE = "nexoDataV2";
+const EMPLOYEE = { email: "empleado@nexo.com", password: "nexo1234", role: "employee" };
+let db = loadDB();
+let session = null;
+
+function loadDB(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(STORAGE));
+    if(saved && saved.users && saved.requests && saved.loans && saved.payments){ saved.users=saved.users.map(u=>({...u,employment:u.employment||"No informado",seniority:Number(u.seniority)||0,proof:u.proof||"no"})); return saved; }
+  }catch(e){}
+  return {users:[], requests:[], loans:[], payments:[]};
+}
+function saveDB(){localStorage.setItem(STORAGE, JSON.stringify(db));}
+function $(id){return document.getElementById(id)}
+function money(v){return new Intl.NumberFormat("es-AR",{style:"currency",currency:"ARS",minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(v)||0)}
+function dateText(v){return new Date(v).toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit"})}
+function toast(msg){const t=$("toast");t.textContent=msg;t.classList.add("show");clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.classList.remove("show"),2400)}
+function user(){return db.users.find(u=>u.id===session?.userId)}
+function uid(prefix){return prefix+"-"+Date.now().toString(36).toUpperCase()+"-"+Math.random().toString(36).slice(2,5).toUpperCase()}
+
+function showClientAuth(){
+  $("clientAuth").classList.remove("hidden");$("employeeAuth").classList.add("hidden");
+  document.querySelectorAll(".auth-tab").forEach(b=>b.classList.toggle("active",b.dataset.auth==="client"));
+}
+function showEmployeeAuth(){
+  $("clientAuth").classList.add("hidden");$("employeeAuth").classList.remove("hidden");
+  document.querySelectorAll(".auth-tab").forEach(b=>b.classList.toggle("active",b.dataset.auth==="employee"));
+}
+document.querySelectorAll(".auth-tab").forEach(b=>b.addEventListener("click",()=>b.dataset.auth==="employee"?showEmployeeAuth():showClientAuth()));
+
+$("showRegister").onclick=()=>{ $("registerForm").classList.remove("hidden");$("loginForm").classList.add("hidden");$("showRegister").classList.add("active");$("showLogin").classList.remove("active");$("authTitle").textContent="Crear cuenta";$("authDescription").textContent="Registrate para administrar tus préstamos y pagos." };
+$("showLogin").onclick=()=>{ $("registerForm").classList.add("hidden");$("loginForm").classList.remove("hidden");$("showLogin").classList.add("active");$("showRegister").classList.remove("active");$("authTitle").textContent="Iniciar sesión";$("authDescription").textContent="Accedé únicamente a los datos de tu propia cuenta." };
+
+$("registerForm").onsubmit=e=>{
+ e.preventDefault();
+ const email=$("regEmail").value.trim().toLowerCase();
+ if(db.users.some(u=>u.email===email)){toast("Ese correo ya está registrado.");return}
+ if($("regPassword").value!==$("regPassword2").value){toast("Las contraseñas no coinciden.");return}
+ const dni=$("regDni").value.trim();
+ const income=Number($("regIncome").value);
+ const seniority=Number($("regSeniority").value);
+ const employment=$("regEmployment").value;
+ const proof=$("regProof").value;
+ if(!/^\d{7,8}$/.test(dni)){toast("El DNI debe tener 7 u 8 números.");return}
+ if(income<=0){toast("Ingresá un ingreso mensual válido.");return}
+ if(seniority<0 || seniority>60){toast("La antigüedad laboral no es válida.");return}
+ if(db.users.some(u=>u.dni===dni)){toast("Ese DNI ya está registrado.");return}
+ const u={id:uid("USR"),name:$("regName").value.trim(),dni,email,income,employment,seniority,proof,password:$("regPassword").value};
+ db.users.push(u);saveDB();session={role:"client",userId:u.id};enterClient();toast("Cuenta creada correctamente.");
+};
+$("loginForm").onsubmit=e=>{
+ e.preventDefault();const email=$("loginEmail").value.trim().toLowerCase(),pass=$("loginPassword").value;
+ const u=db.users.find(x=>x.email===email&&x.password===pass);
+ if(!u){toast("Correo o contraseña incorrectos.");return}
+ session={role:"client",userId:u.id};enterClient();
+};
+$("demoClient").onclick=()=>{
+ let u=db.users.find(x=>x.email==="demo@nexo.com");
+ if(!u){u={id:"USR-DEMO",name:"Cliente Demo",dni:"00000000",email:"demo@nexo.com",income:750000,employment:"Empleado en relación de dependencia",seniority:2,proof:"si",password:"demo1234"};db.users.push(u);saveDB()}
+ session={role:"client",userId:u.id};enterClient();toast("Cliente de demostración iniciado.");
+};
+$("employeeLoginForm").onsubmit=e=>{
+ e.preventDefault();
+ if($("employeeEmail").value.trim().toLowerCase()===EMPLOYEE.email&&$("employeePassword").value===EMPLOYEE.password){session={role:"employee"};enterEmployee()}
+ else toast("Datos de empleado incorrectos.");
 };
 
-const $ = (id) => document.getElementById(id);
+function enterClient(){
+ $("authView").classList.add("hidden");$("employeeApp").classList.add("hidden");$("clientApp").classList.remove("hidden");
+ $("welcomeName").textContent=user().name.split(" ")[0];$("desktopClientName").textContent=user().name;renderAll();go("home");
+}
+function enterEmployee(){
+ $("authView").classList.add("hidden");$("clientApp").classList.add("hidden");$("employeeApp").classList.remove("hidden");renderEmployee();
+}
+function logout(){session=null;$("clientApp").classList.add("hidden");$("employeeApp").classList.add("hidden");$("authView").classList.remove("hidden")}
+$("logoutClient").onclick=logout;$("logoutClientDesktop").onclick=logout;$("logoutEmployee").onclick=logout;$("settingsBtn").onclick=()=>toast("NEXO · versión escolar sin base de datos.");
 
-function money(value) {
-  return new Intl.NumberFormat("es-AR", {
-    style: "currency",
-    currency: "ARS",
-    maximumFractionDigits: 0
-  }).format(Number(value) || 0);
+function go(section){
+ const id=section==="home"?"homeSection":section+"Section";
+ document.querySelectorAll("#clientApp .page").forEach(p=>p.classList.remove("active"));
+ $(id)?.classList.add("active");
+ document.querySelectorAll("#clientApp [data-section]").forEach(b=>b.classList.toggle("active",b.dataset.section===section));
+ if(section==="requests")renderRequests();if(section==="payments")renderPayments();if(section==="home")renderHome();
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-section]");if(b)go(b.dataset.section);const a=e.target.closest("[data-approve]");if(a)decide(a.dataset.approve,"Aprobada");const r=e.target.closest("[data-reject]");if(r)decide(r.dataset.reject,"Rechazada");const p=e.target.closest("[data-pay-installment]");if(p)payInstallment(p.dataset.payInstallment);const c=e.target.closest("[data-pay-cash]");if(c)payCash(c.dataset.payCash)});
+
+$("loanForm").onsubmit=e=>{
+ e.preventDefault();const u=user(),amount=Number($("loanAmount").value),term=Number($("loanTerm").value);
+ const ratio=amount/Math.max(u.income,1);
+ if(u.employment==="Desempleado"){toast("Para solicitar un préstamo necesitás registrar una situación laboral activa.");return}
+ const score=Math.round(Math.max(500,850-ratio*55+(u.seniority>=2?35:0)+(u.proof==="si"?25:0)));
+ const purpose=$("loanPurpose").value.trim(); if(amount<10000){toast("El monto mínimo es $10.000.");return} if(amount>u.income*6){toast("El monto solicitado supera el límite escolar de 6 ingresos mensuales.");return} if(!purpose){toast("Indicá el destino del préstamo.");return} const req={id:uid("SOL"),userId:u.id,type:$("loanType").value,amount,term,purpose,date:new Date().toISOString(),status:"Pendiente",evaluation:{score,risk:score>=750?"Bajo":score>=650?"Medio":"Alto",recommendation:score>=650?"Recomendada":"No recomendada"}};
+ db.requests.unshift(req);saveDB();$("loanForm").reset();toast(req.id+" enviada a evaluación.");setTimeout(()=>go("requests"),250);
+};
+
+function decide(id,decision){
+ const req=db.requests.find(r=>r.id===id);if(!req)return;
+ req.status=decision;
+ if(decision==="Aprobada"){
+   const rate=.55/12,n=req.term,a=req.amount,installment=Math.round(a*(rate*Math.pow(1+rate,n))/(Math.pow(1+rate,n)-1));
+   db.loans.unshift({id:uid("PRE"),requestId:id,userId:req.userId,type:req.type,amount:a,term:n,installment,paid:0,status:"Activa",created:new Date().toISOString()});
+   toast("Solicitud aprobada y préstamo otorgado.");
+ }else toast("Solicitud rechazada.");
+ saveDB();renderEmployee();renderAll();
 }
 
-function showToast(message) {
-  const toast = $("toast");
-  toast.textContent = message;
-  toast.classList.add("show");
-  clearTimeout(showToast.timer);
-  showToast.timer = setTimeout(() => toast.classList.remove("show"), 2800);
+function payInstallment(id){
+ const loan=db.loans.find(l=>l.id===id);if(!loan||loan.status!=="Activa")return;
+ const remaining=loan.term-loan.paid;if(remaining<=0)return;
+ loan.paid++;
+ db.payments.unshift({id:uid("PAG"),loanId:id,userId:loan.userId,type:"Cuota",installment:loan.paid,amount:loan.installment,date:new Date().toISOString()});
+ if(loan.paid>=loan.term)loan.status="Cancelado";
+ saveDB();toast("Cuota pagada y confirmada por el sistema bancario central.");renderAll();
+}
+function payCash(id){
+ const loan=db.loans.find(l=>l.id===id);if(!loan||loan.status!=="Activa")return;
+ const remaining=loan.term-loan.paid, total=remaining*loan.installment;
+ if(!confirm("¿Confirmar pago de contado por "+money(total)+" para cancelar el préstamo?"))return;
+ loan.paid=loan.term;loan.status="Cancelado";
+ db.payments.unshift({id:uid("PAG"),loanId:id,userId:loan.userId,type:"Cancelación de contado",installment:remaining,amount:total,date:new Date().toISOString()});
+ saveDB();toast("Préstamo cancelado de contado.");renderAll();
 }
 
-function initials(name) {
-  return name.split(" ").slice(0, 2).map(x => x[0]).join("").toUpperCase();
+function renderHome(){
+ const u=user(), loans=db.loans.filter(l=>l.userId===u.id&&l.status==="Activa"), debt=loans.reduce((s,l)=>s+(l.term-l.paid)*l.installment,0);
+ $("totalDebt").textContent=money(debt);
+ const active=loans[0];$("nextDue").textContent=active?dateText(Date.now()+30*86400000):"--/--";
+ const ps=db.payments.filter(p=>p.userId===u.id).slice(0,4),list=$("historyList");
+ list.innerHTML=ps.length?ps.map(p=>`<div class="history-item"><span>${dateText(p.date)}</span><span>${p.type} · ${money(p.amount)}</span></div>`).join(""):`<div class="history-empty">Todavía no hay pagos registrados.</div>`;
 }
-
-function setSection(id) {
-  document.querySelectorAll(".page-section").forEach(s => s.classList.remove("active"));
-  const target = $(id);
-  if (target) target.classList.add("active");
-
-  document.querySelectorAll(".nav-btn").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.section === id);
-  });
-
-  window.scrollTo({ top: 0, behavior: "smooth" });
-  if (id === "estado") renderRequests();
-  if (id === "pagos") renderPayments();
-  if (id === "empleado") renderEmployee();
+function renderRequests(){
+ const u=user(),list=$("requestsList"),rs=db.requests.filter(r=>r.userId===u.id);
+ list.innerHTML=rs.length?rs.map(r=>`<article class="request-card"><div class="card-head"><div><h3>${r.id} · ${r.type}</h3><span class="muted">${dateText(r.date)}</span></div><span class="status ${r.status.toLowerCase()}">${r.status}</span></div><div class="details"><div class="detail"><span>Monto</span><strong>${money(r.amount)}</strong></div><div class="detail"><span>Cuotas</span><strong>${r.term}</strong></div><div class="detail"><span>Score</span><strong>${r.evaluation.score}</strong></div><div class="detail"><span>Riesgo</span><strong>${r.evaluation.risk}</strong></div><div class="detail"><span>Recomendación</span><strong>${r.evaluation.recommendation}</strong></div><div class="detail"><span>Destino</span><strong>${r.purpose}</strong></div></div></article>`).join(""):`<div class="history-card"><div class="history-empty">No tenés solicitudes todavía.</div></div>`;
 }
-
-function enterDashboard() {
-  $("authView").classList.add("hidden");
-  $("dashboardView").classList.remove("hidden");
-
-  $("welcomeName").textContent = state.user.name.split(" ")[0];
-  $("sideName").textContent = state.user.name;
-  $("avatar").textContent = initials(state.user.name);
-
-  renderAll();
-  setSection("inicio");
+function renderPayments(){
+ const u=user(),list=$("paymentsList"),loans=db.loans.filter(l=>l.userId===u.id);
+ list.innerHTML=loans.length?loans.map(l=>{
+   const rem=l.term-l.paid,total=rem*l.installment;
+   return `<article class="payment-card"><div class="card-head"><div><h3>${l.id} · ${l.type}</h3><span class="muted">${l.paid}/${l.term} cuotas pagadas</span></div><span class="status ${l.status==="Activa"?"aprobada":"cancelado"}">${l.status}</span></div><div class="details"><div class="detail"><span>Cuota</span><strong>${money(l.installment)}</strong></div><div class="detail"><span>Saldo estimado</span><strong>${money(total)}</strong></div><div class="detail"><span>Pagadas</span><strong>${l.paid}</strong></div></div>${l.status==="Activa"?`<div class="payment-option"><button class="action approve" data-pay-installment="${l.id}">PAGAR CUOTA</button><button class="action cash-button" data-pay-cash="${l.id}">PAGAR CONTADO</button></div>`:""}</article>`
+ }).join(""):`<div class="history-card"><div class="history-empty">Cuando tengas un préstamo aprobado aparecerá acá.</div></div>`;
 }
-
-function resetDemoData() {
-  state.requests = [];
-  state.loans = [];
-  state.payments = [];
-  state.activities = [{
-    title: "Cuenta preparada",
-    text: "El cliente está listo para iniciar una solicitud.",
-    icon: "✓"
-  }];
+function renderEmployee(){
+ const list=$("employeeList"),pending=db.requests.filter(r=>r.status==="Pendiente");
+ list.innerHTML=pending.length?pending.map(r=>{
+   const u=db.users.find(x=>x.id===r.userId);
+   return `<article class="request-card"><div class="card-head"><div><h3>${r.id} · ${r.type}</h3><span class="muted">Cliente: ${u?u.name:"Cuenta no disponible"} · ${u?u.email:""}</span></div><span class="status pendiente">Pendiente</span></div><div class="details"><div class="detail"><span>Monto</span><strong>${money(r.amount)}</strong></div><div class="detail"><span>Cuotas</span><strong>${r.term}</strong></div><div class="detail"><span>Score</span><strong>${r.evaluation.score}</strong></div><div class="detail"><span>Riesgo</span><strong>${r.evaluation.risk}</strong></div><div class="detail"><span>Recomendación</span><strong>${r.evaluation.recommendation}</strong></div><div class="detail"><span>Destino</span><strong>${r.purpose}</strong></div><div class="detail"><span>Situación laboral</span><strong>${u?u.employment:"No informada"}</strong></div><div class="detail"><span>Antigüedad</span><strong>${u?u.seniority:0} años</strong></div><div class="detail"><span>Ingresos</span><strong>${u?money(u.income):"-"}</strong></div></div><div class="actions"><button class="action approve" data-approve="${r.id}">APROBAR</button><button class="action reject" data-reject="${r.id}">RECHAZAR</button></div></article>`
+ }).join(""):`<div class="history-card"><div class="history-empty">No hay solicitudes pendientes.</div></div>`;
 }
-
-$("registerForm").addEventListener("submit", (event) => {
-  event.preventDefault();
-
-  const password = $("regPassword").value;
-  const password2 = $("regPassword2").value;
-
-  if (password !== password2) {
-    showToast("Las contraseñas no coinciden.");
-    return;
-  }
-
-  state.user = {
-    name: $("regName").value.trim(),
-    dni: $("regDni").value.trim(),
-    email: $("regEmail").value.trim(),
-    income: Number($("regIncome").value)
-  };
-
-  resetDemoData();
-  showToast("Cliente registrado correctamente.");
-  setTimeout(enterDashboard, 350);
-});
-
-$("demoLogin").addEventListener("click", () => {
-  state.user = {
-    name: "Milton Pérez",
-    dni: "45123456",
-    email: "cliente@demo.com",
-    income: 750000
-  };
-  resetDemoData();
-  showToast("Ingresaste al modo demostración.");
-  setTimeout(enterDashboard, 350);
-});
-
-$("logoutBtn").addEventListener("click", () => {
-  $("dashboardView").classList.add("hidden");
-  $("authView").classList.remove("hidden");
-  $("registerForm").reset();
-});
-
-document.addEventListener("click", (event) => {
-  const nav = event.target.closest("[data-section]");
-  if (nav) setSection(nav.dataset.section);
-
-  const go = event.target.closest("[data-go]");
-  if (go) setSection(go.dataset.go);
-
-  const approve = event.target.closest("[data-approve]");
-  if (approve) decideRequest(approve.dataset.approve, "Aprobada");
-
-  const reject = event.target.closest("[data-reject]");
-  if (reject) decideRequest(reject.dataset.reject, "Rechazada");
-
-  const pay = event.target.closest("[data-pay]");
-  if (pay) registerPayment(pay.dataset.pay);
-});
-
-$("loanForm").addEventListener("submit", (event) => {
-  event.preventDefault();
-
-  const amount = Number($("loanAmount").value);
-  const term = Number($("loanTerm").value);
-  const type = $("loanType").value;
-  const docs = $("loanDocs").value.trim();
-
-  if (!type || !amount || !term || !docs) {
-    showToast("Completá todos los datos de la solicitud.");
-    return;
-  }
-
-  const request = {
-    id: `SOL-${String(state.requests.length + 1).padStart(4, "0")}`,
-    type,
-    amount,
-    term,
-    docs,
-    date: new Date().toLocaleDateString("es-AR"),
-    status: "Pendiente",
-    evaluation: null
-  };
-
-  // Proceso 3.0: evaluación crediticia simulada.
-  const income = state.user.income;
-  const ratio = amount / Math.max(income, 1);
-  let score = ratio <= 2 ? 780 : ratio <= 4 ? 690 : 590;
-  let risk = score >= 750 ? "Bajo" : score >= 650 ? "Medio" : "Alto";
-  let recommendation = score >= 650 ? "Recomendada" : "No recomendada";
-
-  request.evaluation = {
-    score,
-    risk,
-    recommendation,
-    history: "Sin antecedentes registrados en esta demostración."
-  };
-
-  state.requests.unshift(request);
-  state.activities.unshift({
-    title: `Solicitud ${request.id} registrada`,
-    text: `Evaluación: ${recommendation.toLowerCase()} · Riesgo ${risk}.`,
-    icon: "↗"
-  });
-
-  $("loanForm").reset();
-  renderAll();
-  showToast(`Solicitud ${request.id} enviada a evaluación crediticia.`);
-  setSection("estado");
-});
-
-function decideRequest(id, decision) {
-  const request = state.requests.find(r => r.id === id);
-  if (!request || request.status !== "Pendiente") return;
-
-  request.status = decision;
-
-  if (decision === "Aprobada") {
-    const interest = 0.55;
-    const monthlyRate = interest / 12;
-    const n = request.term;
-    const amount = request.amount;
-    const installment = monthlyRate === 0
-      ? amount / n
-      : amount * (monthlyRate * Math.pow(1 + monthlyRate, n)) /
-        (Math.pow(1 + monthlyRate, n) - 1);
-
-    const loan = {
-      id: `PRE-${String(state.loans.length + 1).padStart(4, "0")}`,
-      requestId: request.id,
-      type: request.type,
-      amount,
-      term: n,
-      installment: Math.round(installment),
-      paid: 0,
-      status: "Activa",
-      centralConfirmed: true
-    };
-
-    state.loans.unshift(loan);
-    state.activities.unshift({
-      title: `Préstamo ${loan.id} otorgado`,
-      text: `${money(amount)} · ${n} cuotas.`,
-      icon: "$"
-    });
-    showToast(`${id} aprobada y préstamo generado.`);
-  } else {
-    state.activities.unshift({
-      title: `Solicitud ${id} rechazada`,
-      text: "La decisión fue registrada por el empleado bancario.",
-      icon: "!"
-    });
-    showToast(`${id} marcada como rechazada.`);
-  }
-
-  renderAll();
-  setSection("empleado");
-}
-
-function registerPayment(loanId) {
-  const loan = state.loans.find(l => l.id === loanId);
-  if (!loan || loan.paid >= loan.term) return;
-
-  loan.paid += 1;
-  const payment = {
-    id: `PAG-${String(state.payments.length + 1).padStart(4, "0")}`,
-    loanId,
-    installment: loan.paid,
-    amount: loan.installment,
-    date: new Date().toLocaleDateString("es-AR"),
-    centralConfirmed: true
-  };
-
-  state.payments.unshift(payment);
-
-  if (loan.paid >= loan.term) loan.status = "Cancelado";
-
-  state.activities.unshift({
-    title: `Pago ${payment.id} confirmado`,
-    text: `Cuota ${payment.installment} de ${loan.term} · ${money(payment.amount)}.`,
-    icon: "✓"
-  });
-
-  showToast("Pago confirmado por el sistema bancario central.");
-  renderAll();
-  setSection("pagos");
-}
-
-function renderStats() {
-  $("statRequests").textContent = state.requests.length;
-  $("statLoans").textContent = state.loans.filter(l => l.status === "Activa").length;
-  $("statPayments").textContent = state.payments.length;
-}
-
-function renderActivity() {
-  const list = $("activityList");
-  if (!state.activities.length) {
-    list.innerHTML = `<div class="empty"><strong>Sin actividad</strong>Comenzá registrando una solicitud.</div>`;
-    return;
-  }
-
-  list.innerHTML = state.activities.slice(0, 5).map(a => `
-    <div class="activity">
-      <div class="activity-icon">${a.icon}</div>
-      <div>
-        <strong>${a.title}</strong>
-        <span>${a.text}</span>
-      </div>
-    </div>
-  `).join("");
-}
-
-function renderRequests() {
-  const list = $("requestsList");
-
-  if (!state.requests.length) {
-    list.innerHTML = `
-      <div class="empty">
-        <strong>No hay solicitudes todavía</strong>
-        Registrá una solicitud para comenzar el proceso.
-      </div>`;
-    return;
-  }
-
-  list.innerHTML = state.requests.map(r => `
-    <article class="request-card">
-      <div class="card-top">
-        <div>
-          <h3>${r.id} · ${r.type}</h3>
-          <span class="muted">Registrada el ${r.date}</span>
-        </div>
-        <span class="status ${r.status.toLowerCase()}">${r.status}</span>
-      </div>
-      <div class="detail-grid">
-        <div class="detail"><span>Monto solicitado</span><strong>${money(r.amount)}</strong></div>
-        <div class="detail"><span>Plazo</span><strong>${r.term} cuotas</strong></div>
-        <div class="detail"><span>Score crediticio</span><strong>${r.evaluation.score}</strong></div>
-        <div class="detail"><span>Nivel de riesgo</span><strong>${r.evaluation.risk}</strong></div>
-        <div class="detail"><span>Recomendación</span><strong>${r.evaluation.recommendation}</strong></div>
-        <div class="detail"><span>Documentación</span><strong>Presentada</strong></div>
-      </div>
-    </article>
-  `).join("");
-}
-
-function renderEmployee() {
-  const list = $("employeeList");
-  const pending = state.requests.filter(r => r.status === "Pendiente");
-
-  if (!pending.length) {
-    list.innerHTML = `
-      <div class="empty">
-        <strong>No hay solicitudes pendientes</strong>
-        Las nuevas solicitudes aparecerán aquí para su revisión.
-      </div>`;
-    return;
-  }
-
-  list.innerHTML = pending.map(r => `
-    <article class="request-card">
-      <div class="card-top">
-        <div>
-          <h3>${r.id} · ${r.type}</h3>
-          <span class="muted">Cliente: ${state.user.name} · DNI ${state.user.dni}</span>
-        </div>
-        <span class="status pendiente">Pendiente</span>
-      </div>
-      <div class="detail-grid">
-        <div class="detail"><span>Monto</span><strong>${money(r.amount)}</strong></div>
-        <div class="detail"><span>Plazo</span><strong>${r.term} cuotas</strong></div>
-        <div class="detail"><span>Score</span><strong>${r.evaluation.score}</strong></div>
-        <div class="detail"><span>Riesgo</span><strong>${r.evaluation.risk}</strong></div>
-        <div class="detail"><span>Recomendación</span><strong>${r.evaluation.recommendation}</strong></div>
-        <div class="detail"><span>Documentación</span><strong>Presentada</strong></div>
-      </div>
-      <div class="employee-actions">
-        <button class="action-btn approve" data-approve="${r.id}">APROBAR</button>
-        <button class="action-btn reject" data-reject="${r.id}">RECHAZAR</button>
-      </div>
-    </article>
-  `).join("");
-}
-
-function renderPayments() {
-  const container = $("paymentsContent");
-
-  if (!state.loans.length) {
-    container.innerHTML = `
-      <div class="empty">
-        <strong>No hay préstamos activos</strong>
-        Cuando una solicitud sea aprobada, sus cuotas aparecerán aquí.
-      </div>`;
-    return;
-  }
-
-  container.innerHTML = `<div class="cards-list">${state.loans.map(loan => `
-    <article class="payment-card">
-      <div class="payment-row">
-        <div>
-          <h3>${loan.id} · ${loan.type}</h3>
-          <span class="muted">${money(loan.installment)} por cuota · ${loan.paid}/${loan.term} cuotas pagadas</span>
-        </div>
-        <button class="primary-btn pay-btn" data-pay="${loan.id}" ${loan.paid >= loan.term ? "disabled" : ""}>
-          ${loan.paid >= loan.term ? "CANCELADO" : "REGISTRAR PAGO"}
-        </button>
-      </div>
-      <div class="detail-grid">
-        <div class="detail"><span>Monto original</span><strong>${money(loan.amount)}</strong></div>
-        <div class="detail"><span>Estado</span><strong>${loan.status}</strong></div>
-        <div class="detail"><span>Sistema bancario</span><strong>${loan.centralConfirmed ? "Confirmado" : "Pendiente"}</strong></div>
-      </div>
-    </article>
-  `).join("")}</div>`;
-}
-
-function renderAll() {
-  renderStats();
-  renderActivity();
-  renderRequests();
-  renderPayments();
-  renderEmployee();
-}
+function renderAll(){renderHome();renderRequests();renderPayments()}
