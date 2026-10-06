@@ -6,7 +6,7 @@ let session = null;
 function loadDB(){
   try{
     const saved = JSON.parse(localStorage.getItem(STORAGE));
-    if(saved && saved.users && saved.requests && saved.loans && saved.payments){ saved.users=saved.users.map(u=>({...u,employment:u.employment||"No informado",seniority:Number(u.seniority)||0,proof:u.proof||"no"})); return saved; }
+    if(saved && saved.users && saved.requests && saved.loans && saved.payments){ saved.users=saved.users.map(u=>({...u,phone:u.phone||"",employment:u.employment||"No informado",seniority:Number(u.seniority)||0,proof:u.proof||"no"})); return saved; }
   }catch(e){}
   return {users:[], requests:[], loans:[], payments:[]};
 }
@@ -28,8 +28,25 @@ function showEmployeeAuth(){
 }
 document.querySelectorAll(".auth-tab").forEach(b=>b.addEventListener("click",()=>b.dataset.auth==="employee"?showEmployeeAuth():showClientAuth()));
 
-$("showRegister").onclick=()=>{ $("registerForm").classList.remove("hidden");$("loginForm").classList.add("hidden");$("showRegister").classList.add("active");$("showLogin").classList.remove("active");$("authTitle").textContent="Crear cuenta";$("authDescription").textContent="Registrate para administrar tus préstamos y pagos." };
+$("showRegister").onclick=()=>{ $("registerForm").classList.remove("hidden");$("loginForm").classList.add("hidden");$("showRegister").classList.add("active");$("showLogin").classList.remove("active");$("authTitle").textContent="Crear cuenta";$("authDescription").textContent="Registrate para administrar tus préstamos y pagos.";setRegisterStep(1); };
 $("showLogin").onclick=()=>{ $("registerForm").classList.add("hidden");$("loginForm").classList.remove("hidden");$("showLogin").classList.add("active");$("showRegister").classList.remove("active");$("authTitle").textContent="Iniciar sesión";$("authDescription").textContent="Accedé únicamente a los datos de tu propia cuenta." };
+
+// Registro dividido en dos pasos para que el formulario sea más simple y cómodo.
+let registerStep=1;
+function setRegisterStep(step){
+ registerStep=step;
+ document.querySelectorAll('.register-step').forEach(el=>el.classList.toggle('active',Number(el.dataset.step)===step));
+ document.querySelectorAll('.register-dot').forEach(el=>el.classList.toggle('active',Number(el.dataset.stepDot)<=step));
+ $("registerStepTitle").textContent=step===1?"Datos personales":"Datos laborales y seguridad";
+ $("registerStepText").textContent=step===1?"Paso 1 de 2 · Información básica":"Paso 2 de 2 · Información para evaluar tu solicitud";
+}
+$("registerNext").onclick=()=>{
+ const ids=["regName","regDni","regEmail","regPhone"];
+ const ok=ids.every(id=>$(id).reportValidity());
+ if(!ok)return;
+ setRegisterStep(2);
+};
+$("registerBack").onclick=()=>setRegisterStep(1);
 
 $("registerForm").onsubmit=e=>{
  e.preventDefault();
@@ -40,12 +57,13 @@ $("registerForm").onsubmit=e=>{
  const income=Number($("regIncome").value);
  const seniority=Number($("regSeniority").value);
  const employment=$("regEmployment").value;
+ const phone=$("regPhone").value.trim();
  const proof=$("regProof").value;
  if(!/^\d{7,8}$/.test(dni)){toast("El DNI debe tener 7 u 8 números.");return}
  if(income<=0){toast("Ingresá un ingreso mensual válido.");return}
  if(seniority<0 || seniority>60){toast("La antigüedad laboral no es válida.");return}
  if(db.users.some(u=>u.dni===dni)){toast("Ese DNI ya está registrado.");return}
- const u={id:uid("USR"),name:$("regName").value.trim(),dni,email,income,employment,seniority,proof,password:$("regPassword").value};
+ const u={id:uid("USR"),name:$("regName").value.trim(),dni,email,phone,income,employment,seniority,proof,password:$("regPassword").value};
  db.users.push(u);saveDB();session={role:"client",userId:u.id};enterClient();toast("Cuenta creada correctamente.");
 };
 $("loginForm").onsubmit=e=>{
@@ -56,7 +74,7 @@ $("loginForm").onsubmit=e=>{
 };
 $("demoClient").onclick=()=>{
  let u=db.users.find(x=>x.email==="demo@nexo.com");
- if(!u){u={id:"USR-DEMO",name:"Cliente Demo",dni:"00000000",email:"demo@nexo.com",income:750000,employment:"Empleado en relación de dependencia",seniority:2,proof:"si",password:"demo1234"};db.users.push(u);saveDB()}
+ if(!u){u={id:"USR-DEMO",name:"Cliente Demo",dni:"00000000",email:"demo@nexo.com",phone:"11 5555-0000",income:750000,employment:"Empleado en relación de dependencia",seniority:2,proof:"si",password:"demo1234"};db.users.push(u);saveDB()}
  session={role:"client",userId:u.id};enterClient();toast("Cliente de demostración iniciado.");
 };
 $("employeeLoginForm").onsubmit=e=>{
@@ -67,20 +85,20 @@ $("employeeLoginForm").onsubmit=e=>{
 
 function enterClient(){
  $("authView").classList.add("hidden");$("employeeApp").classList.add("hidden");$("clientApp").classList.remove("hidden");
- $("welcomeName").textContent=user().name.split(" ")[0];$("desktopClientName").textContent=user().name;renderAll();go("home");
+ $("welcomeName").textContent=user().name.split(" ")[0];$("desktopClientName").textContent=user().name;renderAll();renderProfile();applyTheme();go("home");
 }
 function enterEmployee(){
  $("authView").classList.add("hidden");$("clientApp").classList.add("hidden");$("employeeApp").classList.remove("hidden");renderEmployee();
 }
 function logout(){session=null;$("clientApp").classList.add("hidden");$("employeeApp").classList.add("hidden");$("authView").classList.remove("hidden")}
-$("logoutClient").onclick=logout;$("logoutClientDesktop").onclick=logout;$("logoutEmployee").onclick=logout;$("settingsBtn").onclick=()=>toast("NEXO · versión escolar sin base de datos.");
+$("logoutClient").onclick=logout;$("logoutClientDesktop").onclick=logout;$("logoutEmployee").onclick=logout;
 
 function go(section){
  const id=section==="home"?"homeSection":section+"Section";
  document.querySelectorAll("#clientApp .page").forEach(p=>p.classList.remove("active"));
  $(id)?.classList.add("active");
  document.querySelectorAll("#clientApp [data-section]").forEach(b=>b.classList.toggle("active",b.dataset.section===section));
- if(section==="requests")renderRequests();if(section==="payments")renderPayments();if(section==="home")renderHome();
+ if(section==="requests")renderRequests();if(section==="payments")renderPayments();if(section==="home")renderHome();if(section==="settings")renderProfile();
  window.scrollTo({top:0,behavior:"smooth"});
 }
 document.addEventListener("click",e=>{const b=e.target.closest("[data-section]");if(b)go(b.dataset.section);const a=e.target.closest("[data-approve]");if(a)decide(a.dataset.approve,"Aprobada");const r=e.target.closest("[data-reject]");if(r)decide(r.dataset.reject,"Rechazada");const p=e.target.closest("[data-pay-installment]");if(p)payInstallment(p.dataset.payInstallment);const c=e.target.closest("[data-pay-cash]");if(c)payCash(c.dataset.payCash)});
@@ -121,6 +139,41 @@ function payCash(id){
  db.payments.unshift({id:uid("PAG"),loanId:id,userId:loan.userId,type:"Cancelación de contado",installment:remaining,amount:total,date:new Date().toISOString()});
  saveDB();toast("Préstamo cancelado de contado.");renderAll();
 }
+
+function renderProfile(){
+ const u=user(); if(!u)return;
+ $("profileName").value=u.name||"";
+ $("profilePhone").value=u.phone||"";
+ $("profileEmail").value=u.email||"";
+ $("profileDni").value=u.dni||"";
+ $("profileEmployment").value=u.employment||"No informado";
+ $("profileIncome").value=u.income||"";
+ $("profileHeading").textContent=u.name||"Mi perfil";
+ $("profileAvatar").textContent=(u.name||"C").trim().charAt(0).toUpperCase();
+ $("settingsSessionEmail").textContent=u.email||"";
+}
+
+$("profileForm").onsubmit=e=>{
+ e.preventDefault(); const u=user(); if(!u)return;
+ const email=$("profileEmail").value.trim().toLowerCase();
+ if(db.users.some(x=>x.id!==u.id&&x.email===email)){toast("Ese correo ya está registrado.");return}
+ const income=Number($("profileIncome").value);
+ if(!$("profileName").value.trim()||!$("profilePhone").value.trim()||!email||income<=0){toast("Completá los datos correctamente.");return}
+ u.name=$("profileName").value.trim();u.phone=$("profilePhone").value.trim();u.email=email;u.employment=$("profileEmployment").value;u.income=income;
+ saveDB();$("welcomeName").textContent=u.name.split(" ")[0];$("desktopClientName").textContent=u.name;renderProfile();toast("Datos actualizados correctamente.");
+};
+
+function applyTheme(){
+ const dark=localStorage.getItem("nexoDarkMode")==="true";
+ document.body.classList.toggle("dark-mode",dark);
+ const toggle=$("darkModeToggle"); if(toggle)toggle.checked=dark;
+}
+
+$("darkModeToggle").addEventListener("change",e=>{
+ localStorage.setItem("nexoDarkMode",e.target.checked?"true":"false");
+ applyTheme();
+ toast(e.target.checked?"Modo oscuro activado.":"Modo claro activado.");
+});
 
 function renderHome(){
  const u=user(), loans=db.loans.filter(l=>l.userId===u.id&&l.status==="Activa"), debt=loans.reduce((s,l)=>s+(l.term-l.paid)*l.installment,0);
