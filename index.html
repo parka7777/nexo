@@ -32,13 +32,31 @@
           <button id="showLogin" class="mode">Iniciar sesión</button>
         </div>
 
-        <form id="registerForm" class="auth-form">
-          <label>Nombre completo<input id="regName" type="text" placeholder="Nombre y apellido" required></label>
-          <label>DNI<input id="regDni" type="text" inputmode="numeric" placeholder="DNI" required></label>
-          <label>Correo electrónico<input id="regEmail" type="email" placeholder="correo@ejemplo.com" required></label>
-          <label>Situación laboral<select id="regEmployment" required><option value="">Seleccionar</option><option>Empleado en relación de dependencia</option><option>Trabajador independiente</option><option>Monotributista</option><option>Desempleado</option></select></label><label>Ingresos mensuales<input id="regIncome" type="number" min="1" placeholder="$ 500000" required></label><label>Antigüedad laboral (años)<input id="regSeniority" type="number" min="0" max="60" step="1" placeholder="Ej.: 2" required></label><label>¿Presentás documentación de ingresos?<select id="regProof" required><option value="">Seleccionar</option><option value="si">Sí</option><option value="no">No</option></select></label><label>Contraseña<input id="regPassword" type="password" minlength="4" placeholder="Contraseña" required></label>
-          <label>Confirmar contraseña<input id="regPassword2" type="password" minlength="4" placeholder="Confirmar contraseña" required></label>
-          <button class="pink-button" type="submit">CREAR CUENTA</button>
+        <form id="registerForm" class="auth-form register-wizard">
+          <div class="register-progress" aria-label="Progreso del registro">
+            <span class="register-dot active" data-step-dot="1">1</span>
+            <i></i>
+            <span class="register-dot" data-step-dot="2">2</span>
+          </div>
+          <div class="register-step-title"><strong id="registerStepTitle">Datos personales</strong><span id="registerStepText">Paso 1 de 2 · Información básica</span></div>
+
+          <div class="register-step active" data-step="1">
+            <label>Nombre completo<input id="regName" type="text" placeholder="Nombre y apellido" required></label>
+            <label>DNI<input id="regDni" type="text" inputmode="numeric" placeholder="DNI" required></label>
+            <label>Correo electrónico<input id="regEmail" type="email" placeholder="correo@ejemplo.com" required></label>
+            <label>Celular<input id="regPhone" type="tel" inputmode="tel" placeholder="11 1234-5678" required></label>
+            <button id="registerNext" class="pink-button" type="button">CONTINUAR</button>
+          </div>
+
+          <div class="register-step" data-step="2">
+            <label>Situación laboral<select id="regEmployment" required><option value="">Seleccionar</option><option>Empleado en relación de dependencia</option><option>Trabajador independiente</option><option>Monotributista</option><option>Desempleado</option></select></label>
+            <label>Ingresos mensuales<input id="regIncome" type="number" min="1" placeholder="$ 500000" required></label>
+            <label>Antigüedad laboral (años)<input id="regSeniority" type="number" min="0" max="60" step="1" placeholder="Ej.: 2" required></label>
+            <label>¿Presentás documentación de ingresos?<select id="regProof" required><option value="">Seleccionar</option><option value="si">Sí</option><option value="no">No</option></select></label>
+            <label>Contraseña<input id="regPassword" type="password" minlength="4" placeholder="Contraseña" required></label>
+            <label>Confirmar contraseña<input id="regPassword2" type="password" minlength="4" placeholder="Confirmar contraseña" required></label>
+            <div class="register-actions"><button id="registerBack" class="secondary-button" type="button">VOLVER</button><button class="pink-button" type="submit">CREAR CUENTA</button></div>
+          </div>
         </form>
 
         <form id="loginForm" class="auth-form hidden">
@@ -67,7 +85,7 @@
   <!-- APLICACIÓN CLIENTE -->
   <main id="clientApp" class="app hidden">
     <header class="mobile-header">
-      <button class="icon-button" id="settingsBtn" aria-label="Configuración">⚙</button>
+      <button class="icon-button" id="settingsBtn" aria-label="Configuración" data-section="settings">⚙</button>
       <div class="mini-brand"><div class="nexo-mark small"><i></i><i></i><i></i></div><strong>NEXO</strong></div>
       <button class="icon-button" id="logoutClient" aria-label="Cerrar sesión">↪</button>
     </header>
@@ -77,6 +95,7 @@
       <button class="nav-link" data-section="request">Solicitar préstamo</button>
       <button class="nav-link" data-section="requests">Mis solicitudes</button>
       <button class="nav-link" data-section="payments">Pagos</button>
+      <button class="nav-link" data-section="settings">Configuración</button>
       <span class="nav-spacer"></span>
       <span class="account-name" id="desktopClientName"></span>
       <button class="nav-link logout" id="logoutClientDesktop">Salir</button>
@@ -100,11 +119,7 @@
         <div id="historyList" class="history-list"></div>
       </div>
 
-      <div class="quick-actions">
-        <button data-section="request"><span>＋</span><small>Nuevo préstamo</small></button>
-        <button data-section="requests"><span>▤</span><small>Solicitudes</small></button>
-        <button data-section="payments"><span>$</span><small>Pagos</small></button>
-      </div>
+
     </section>
 
     <section id="requestSection" class="page inner-page">
@@ -114,7 +129,6 @@
         <label>Monto solicitado<input id="loanAmount" type="number" min="10000" step="10000" placeholder="$ 1.000.000" required></label>
         <label>Plazo<select id="loanTerm" required><option value="">Seleccionar cuotas</option><option value="6">6 cuotas</option><option value="12">12 cuotas</option><option value="18">18 cuotas</option><option value="24">24 cuotas</option></select></label>
         <label>Destino del préstamo<textarea id="loanPurpose" placeholder="Ej.: compra de una computadora, estudios, refacción del hogar..." required></textarea></label>
-        <div class="process-note"><strong>Datos ya registrados</strong><span>Tu DNI, ingresos y situación laboral ya fueron informados al crear la cuenta. NEXO los utilizará para la evaluación crediticia, por eso no es necesario volver a pedirlos.</span></div>
         <button class="pink-button" type="submit">ENVIAR SOLICITUD</button>
       </form>
     </section>
@@ -127,6 +141,33 @@
     <section id="paymentsSection" class="page inner-page">
       <div class="page-heading"><span class="section-label">PAGOS</span><h2>Mis pagos</h2><p>Podés pagar una cuota o cancelar un préstamo completo de contado.</p></div>
       <div id="paymentsList" class="stack"></div>
+    </section>
+
+    <section id="settingsSection" class="page inner-page">
+      <div class="page-heading"><span class="section-label">CONFIGURACIÓN</span><h2>Mi cuenta</h2><p>Consultá y modificá tus datos personales cuando los necesites.</p></div>
+      <div class="profile-card">
+        <div class="profile-top">
+          <div class="avatar" id="profileAvatar">C</div>
+          <div><h3 id="profileHeading">Mi perfil</h3><span>Datos de tu cuenta NEXO</span></div>
+        </div>
+        <form id="profileForm" class="profile-form">
+          <label>Nombre completo<input id="profileName" type="text" required></label>
+          <label>Celular<input id="profilePhone" type="tel" inputmode="tel" required></label>
+          <label>Correo electrónico<input id="profileEmail" type="email" required></label>
+          <label>DNI<input id="profileDni" type="text" readonly></label>
+          <label>Situación laboral<select id="profileEmployment" required><option>Empleado en relación de dependencia</option><option>Trabajador independiente</option><option>Monotributista</option><option>Desempleado</option></select></label>
+          <label>Ingresos mensuales<input id="profileIncome" type="number" min="1" required></label>
+          <button class="pink-button" type="submit">GUARDAR CAMBIOS</button>
+        </form>
+      </div>
+
+      <div class="settings-card">
+        <div><strong>Modo oscuro</strong><span>Cambiá la apariencia de NEXO</span></div>
+        <label class="switch"><input id="darkModeToggle" type="checkbox"><span class="slider"></span></label>
+      </div>
+      <div class="settings-card info-setting">
+        <div><strong>Sesión actual</strong><span id="settingsSessionEmail"></span></div>
+      </div>
     </section>
 
     <nav class="bottom-nav">
