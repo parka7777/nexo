@@ -38,3 +38,30 @@ button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:
  .employee-header{padding:20px 42px}
  .stack{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+.profile-card{padding:20px;border-radius:22px;background:rgba(255,255,255,.78);box-shadow:var(--shadow)}
+.profile-top{display:flex;align-items:center;gap:12px;margin-bottom:18px}.profile-top h3{margin:0 0 3px;font-family:"Barlow Condensed";font-size:22px;color:var(--purple)}.profile-top span{font-size:9px;color:var(--muted)}
+.avatar{width:48px;height:48px;display:grid;place-items:center;border-radius:16px;background:linear-gradient(135deg,var(--purple),var(--pinkLight));color:#fff;font-family:"Barlow Condensed";font-size:25px;font-weight:700;box-shadow:0 8px 18px rgba(128,100,244,.2)}
+.profile-form{display:grid;gap:13px}.profile-form input,.profile-form select{background:linear-gradient(135deg,#957cf8,#8063ef)}.profile-form input[readonly]{opacity:.65;cursor:not-allowed}.profile-form .pink-button{margin-top:3px}
+.settings-card{margin-top:12px;padding:16px 18px;border-radius:18px;background:rgba(255,255,255,.78);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:space-between;gap:15px}.settings-card strong{display:block;font-size:11px}.settings-card span{display:block;margin-top:3px;color:var(--muted);font-size:9px}.info-setting{justify-content:flex-start}
+.switch{position:relative;display:block;width:48px;height:27px;flex:0 0 auto}.switch input{position:absolute;opacity:0;width:0;height:0}.slider{position:absolute;inset:0;border-radius:30px;background:#d8cedf;cursor:pointer;transition:.2s}.slider:before{content:"";position:absolute;width:21px;height:21px;left:3px;top:3px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.15);transition:.2s}.switch input:checked+.slider{background:var(--purple)}.switch input:checked+.slider:before{transform:translateX(21px)}
+body.dark-mode{--lilac:#1e1926;--lilac2:#2b2237;--text:#eee7f3;--muted:#aaa0b2;--white:#17131d;--line:#3b3045;--shadow:0 15px 35px rgba(0,0,0,.3);background:linear-gradient(145deg,#15111a,#21182a)}
+body.dark-mode .auth-card,body.dark-mode .app,body.dark-mode .form-card,body.dark-mode .request-card,body.dark-mode .payment-card,body.dark-mode .profile-card,body.dark-mode .settings-card{background:rgba(31,25,39,.92);border-color:#3b3045}
+body.dark-mode .mobile-header,body.dark-mode .desktop-nav,body.dark-mode .employee-header{background:rgba(25,20,31,.94);border-color:#3b3045}
+body.dark-mode .hero-card{background:#211a2a}.dark-mode .history-item{background:#30243a}.dark-mode .detail{background:#2a2232}.dark-mode .quick-actions button{background:rgba(42,34,50,.9)}.dark-mode .bottom-nav{background:rgba(25,20,31,.96);border-color:#3b3045}.dark-mode .auth-tabs{background:#2a2232}.dark-mode .auth-tab.active,.dark-mode .mode.active{background:#3a3045}.dark-mode select option{background:#241d2c;color:#eee7f3}.dark-mode .demo-box{background:#30263a}.dark-mode .process-note{background:#30263a}.dark-mode .warning{background:#3d3420;color:#e6cf83}.dark-mode .loan-summary strong{color:#b09cff}.dark-mode .nav-link.active,.dark-mode .nav-link:hover{background:#30263a}
+@media(min-width:700px){.profile-card{padding:26px}.profile-form{grid-template-columns:1fr 1fr;gap:16px}.profile-form .pink-button{grid-column:1 / -1}.settings-card{padding:18px 20px}}
+
+/* Registro en dos pasos */
+.register-wizard{gap:10px}
+.register-progress{display:flex;align-items:center;justify-content:center;gap:8px;margin:2px 0 2px}
+.register-progress i{width:42px;height:2px;background:#ded2e8;border-radius:2px}
+.register-dot{width:25px;height:25px;display:grid;place-items:center;border-radius:50%;background:#e5dceb;color:#9a8da3;font-size:10px;font-weight:700;font-style:normal;transition:.2s}
+.register-dot.active{background:var(--purple);color:#fff}
+.register-step-title{text-align:center;margin:0 0 3px}
+.register-step-title strong{display:block;color:var(--purple);font-family:"Barlow Condensed";font-size:21px}
+.register-step-title span{display:block;color:var(--muted);font-size:9px;margin-top:2px}
+.register-step{display:none;gap:11px}
+.register-step.active{display:grid}
+.register-actions{display:grid;grid-template-columns:.7fr 1.3fr;gap:8px;margin-top:1px}
+.secondary-button{border:1px solid #ddcfe8;border-radius:12px;padding:12px 12px;color:var(--purpleDark);background:#fff;font-family:"Barlow Condensed";font-size:15px;font-weight:600;letter-spacing:.06em}
+body.dark-mode .secondary-button{background:#30263a;border-color:#4a3d55;color:#c0b2ff}
